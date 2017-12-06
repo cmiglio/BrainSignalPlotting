@@ -36,7 +36,7 @@ help linspace
 % this using the function 'detrend':
 %%
 signalOneChannel=detrend(signalOneChannel,'constant'); % Caution! by doing this, we are replacing the signalOneChannel value with the new value
-%% Plotting an one-channel signal
+%% Plotting one-channel signal
 % Using the following code we can plot a one-channel signal:
 %%
 close all % Close all the figures
@@ -201,6 +201,27 @@ camroll(90) % rotate to see front up.
 colormap parula
 axis equal
 axis off
+%%
+correl=[];
+for i = 1:size(signalMultiChannel,1)
+    aux=corrcoef(signalOneChannel,signalMultiChannel(i,:));
+    correl(i)=(aux(1,2)); 
+end
+vq = TriScatteredInterp(X,Y,correl','natural'); 
+figure(7)
+resolution=0.001;
+ti = min(min(X),min(Y)):resolution:max(max(X),max(Y));
+[qx,qy] = meshgrid(ti,ti);
+qz = vq(qx,qy);
+surf(qx,qy,qz,'FaceColor','flat','EdgeColor','none');
+hold on
+contour(qx,qy,qz,'Color',[0 0 0]); % to plot the contour lines in black
+view(0,90) % go to X-Y view
+ax=gca;
+camroll(90) % rotate to see front up. 
+colormap parula
+axis equal
+axis off
 %% Plotting source data
 % While is easy to find ways to plot sensor data in fieldtrip or eeglab, source 
 % data is more difficult to plot in a meaningful way. Here are some examples to 
@@ -208,16 +229,46 @@ axis off
 % 
 % With the following code we can plot the triangular mesh of the subject:
 %%
-figure(7)
+figure(8)
 trimesh(head.Faces,head.Vertices(:,1),head.Vertices(:,2),head.Vertices(:,3),'EdgeColor',[0 0 0],'FaceColor','none')
 axis equal
 axis off
 %% 
 % We can also plot the triangular mesh of the brain, overlapped with the 
-% head. With the properties of edges and face, we can change how we visualize 
-% meshes. 
+% head. With the properties of edges and faces, we can change how we visualize 
+% the color and alpha (transparency) of the meshes. 
 %%
-figure(8)
-trimesh(head.Faces,head.Vertices(:,1),head.Vertices(:,2),head.Vertices(:,3),'EdgeColor',[0.95 0.75 0.5],'FaceColor','none')
+figure(9)
+trimesh(head.Faces,head.Vertices(:,1),head.Vertices(:,2),head.Vertices(:,3),'EdgeColor',[0.95 0.75 0.5],'FaceColor',[0.95 0.75 0.5], 'EdgeAlpha',0.7,'FaceAlpha',0.7)
 axis equal
 axis off
+hold on
+trimesh(cortex.Faces,cortex.Vertices(:,1),cortex.Vertices(:,2),cortex.Vertices(:,3),'EdgeColor',[0.5 0.5 0.5],'FaceColor',[0.5 0.5 0.5], 'EdgeAlpha',0.9,'FaceAlpha',0.9)
+%% 
+% We can plot the source sensors, using scatter3, along with the head mesh
+%%
+figure(10)
+trimesh(head.Faces,head.Vertices(:,1),head.Vertices(:,2),head.Vertices(:,3),'EdgeColor',[0.5 0.5 0.5],'FaceColor',[0.5 0.5 0.5], 'EdgeAlpha',0.3,'FaceAlpha',0.3)
+axis equal
+axis off
+hold on
+scatter3(posSourceSignal(:,1),posSourceSignal(:,2),posSourceSignal(:,3),30,'blue','filled')
+%% 
+% We can assign a color depending on the value of the source signal, for 
+% example, using the colour as the value of the correlation with each of the sensors 
+% with the one channel signal
+%%
+correl=[];
+for i = 1:size(sourceSignals,1)
+    aux=corrcoef(signalOneChannel,sourceSignals(i,:));
+    correl(i)=abs(aux(1,2)); % We don't care if it is a positive or negative correlation
+end
+figure(11)
+trimesh(head.Faces,head.Vertices(:,1),head.Vertices(:,2),head.Vertices(:,3),'EdgeColor',[0.5 0.5 0.5],'FaceColor',[0.5 0.5 0.5], 'EdgeAlpha',0.3,'FaceAlpha',0.3)
+axis equal
+axis off
+hold on
+scatter3(posSourceSignal(:,1),posSourceSignal(:,2),posSourceSignal(:,3),30,correl,'filled')
+colorbar
+%% 
+%
